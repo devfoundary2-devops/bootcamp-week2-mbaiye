@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-gopher-mascot
+  namespace: shopmicro
+  labels:
+    app: gopher
+    tier: easter-egg
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gopher
+  template:
+    metadata:
+      labels:
+        app: gopher
+        tier: easter-egg
+    spec:
+      containers:
+      - name: gopher
+        image: shopmicro-backend:v3
+        imagePullPolicy: Never
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3001"
+        - name: POSTGRES_URL
+          value: "postgresql://postgres:postgres@postgres:5432/shopmicro"
+        - name: REDIS_URL
+          value: "redis://redis:6379"
+        - name: OTEL_SERVICE_NAME
+          value: "shopmicro-gopher"
+        ports:
+        - containerPort: 3001
+          name: http
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gopher
+  namespace: shopmicro
+  labels:
+    app: gopher
+    tier: easter-egg
+spec:
+  selector:
+    app: gopher
+  ports:
+  - port: 3001
+    targetPort: 3001
+    name: http
+  type: ClusterIP
